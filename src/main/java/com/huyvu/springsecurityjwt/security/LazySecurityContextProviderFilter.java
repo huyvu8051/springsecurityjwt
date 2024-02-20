@@ -34,18 +34,12 @@ public class LazySecurityContextProviderFilter extends OncePerRequestFilter {
         filterChain.doFilter(req, res);
     }
 
+    @RequiredArgsConstructor
     static class LazyJwtSecurityContextProvider implements SecurityContext {
-
-        private final SecurityContext securityCtx;
 
         private final HttpServletRequest req;
         private final HttpServletResponse res;
-
-        LazyJwtSecurityContextProvider(HttpServletRequest req, HttpServletResponse res, SecurityContext securityCtx) {
-            this.securityCtx = securityCtx;
-            this.req = req;
-            this.res = res;
-        }
+        private final SecurityContext securityCtx;
 
 
         @Override

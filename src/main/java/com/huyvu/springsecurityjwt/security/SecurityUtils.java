@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SecurityUtils {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -37,6 +40,18 @@ public class SecurityUtils {
 
 
     @SneakyThrows
+    public static String createToken(JwtTokenVo jwtTokenVo) {
+        var builder = JWT.create();
+        var tokenJson = OBJECT_MAPPER.writeValueAsString(jwtTokenVo);
+        builder.withClaim(USER_CLAIM, tokenJson);
+        return builder
+                .withIssuedAt(new Date())
+                .withIssuer(ISSUER)
+                .withExpiresAt(new Date(System.currentTimeMillis() + SIX_HOUR))
+                .sign(ALGORITHM);
+    }
+
+    @SneakyThrows
     public static DecodedJWT validate(String token) {
         var verifier = JWT.require(ALGORITHM)
                 .withIssuer(ISSUER)
@@ -51,19 +66,6 @@ public class SecurityUtils {
         return OBJECT_MAPPER.readValue(userClaim, JwtTokenVo.class);
     }
 
-
-
-    @SneakyThrows
-    public static String createToken(JwtTokenVo jwtTokenVo) {
-        var builder = JWT.create();
-        var tokenJson = OBJECT_MAPPER.writeValueAsString(jwtTokenVo);
-        builder.withClaim(USER_CLAIM, tokenJson);
-        return builder
-                .withIssuedAt(new Date())
-                .withIssuer(ISSUER)
-                .withExpiresAt(new Date(System.currentTimeMillis() + SIX_HOUR))
-                .sign(ALGORITHM);
-    }
 
     public static String getToken(HttpServletRequest req) {
         var cookies = req.getCookies();

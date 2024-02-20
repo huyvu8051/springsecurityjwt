@@ -25,14 +25,12 @@ public class HomeController {
     @GetMapping("/secured")
     String secured(){
         var session = SecurityUtils.getSession();
-
         return "Secured " + session;
     }
 
     @GetMapping("/admin")
     String admin(){
         var session = SecurityUtils.getSession();
-
         return "Admin " + session;
     }
 
@@ -41,7 +39,6 @@ public class HomeController {
     @GetMapping("/guest")
     String guest(){
         var session = SecurityUtils.getSession();
-
         return "Guest " + session;
     }
 }
