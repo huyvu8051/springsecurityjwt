@@ -41,4 +41,11 @@ public class HomeController {
         var session = SecurityUtils.getSession();
         return "Guest " + session;
     }
+
+
+    @GetMapping("/business")
+    String business(){
+        var session = SecurityUtils.getSession();
+        return "Business " + session;
+    }
 }
