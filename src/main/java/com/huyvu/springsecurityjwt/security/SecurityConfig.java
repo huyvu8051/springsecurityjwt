@@ -19,13 +19,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, LazySecurityContextProviderFilter lazySecurityContextProviderFilter) throws Exception {
 
         http
-                .sessionManagement(se -> se.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .sessionManagement(se -> se.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> {
                     a.requestMatchers("/secured/**").authenticated();
                     a.requestMatchers("/admin/**").hasRole("admin");
                     a.anyRequest().permitAll();
-                })
-                .addFilterAfter(lazySecurityContextProviderFilter, SessionManagementFilter.class);
+                }).httpBasic((d)->{});
 
 
         return http.build();
