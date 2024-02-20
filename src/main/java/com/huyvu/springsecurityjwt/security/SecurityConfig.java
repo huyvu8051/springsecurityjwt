@@ -22,7 +22,7 @@ public class SecurityConfig {
                 .sessionManagement(se -> se.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> {
                     a.requestMatchers("/secured/**").authenticated();
-                    a.requestMatchers("/admin/**").hasRole("admin");
+                    a.requestMatchers("/admin/**").hasAuthority("admin");
                     a.anyRequest().permitAll();
                 })
                 .addFilterAfter(lazySecurityContextProviderFilter, SessionManagementFilter.class);
