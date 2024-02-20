@@ -2,6 +2,7 @@ package com.huyvu.springsecurityjwt.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,6 +13,7 @@ import org.springframework.security.web.session.SessionManagementFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, LazySecurityContextProviderFilter lazySecurityContextProviderFilter) throws Exception {
@@ -20,6 +22,7 @@ public class SecurityConfig {
                 .sessionManagement(se -> se.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> {
                     a.requestMatchers("/secured/**").authenticated();
+                    a.requestMatchers("/admin/**").hasRole("admin");
                     a.anyRequest().permitAll();
                 })
                 .addFilterAfter(lazySecurityContextProviderFilter, SessionManagementFilter.class);

@@ -3,6 +3,9 @@ package com.huyvu.springsecurityjwt.controller;
 import com.huyvu.springsecurityjwt.security.JwtTokenVo;
 import com.huyvu.springsecurityjwt.security.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.context.annotation.Role;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +27,21 @@ public class HomeController {
         var session = SecurityUtils.getSession();
 
         return "Secured " + session;
+    }
+
+    @GetMapping("/admin")
+    String admin(){
+        var session = SecurityUtils.getSession();
+
+        return "Admin " + session;
+    }
+
+
+    @PreAuthorize("hasAuthority('guest')")
+    @GetMapping("/guest")
+    String guest(){
+        var session = SecurityUtils.getSession();
+
+        return "Guest " + session;
     }
 }

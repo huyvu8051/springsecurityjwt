@@ -19,6 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Date;
 
+import static javax.management.timer.Timer.ONE_HOUR;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -60,10 +62,15 @@ public class LazySecurityContextProviderFilter extends OncePerRequestFilter {
                     var valueObject = SecurityUtils.getValueObject(decodedJWT);
                     var authToken = new PreAuthenticatedAuthenticationToken(valueObject, null, valueObject.getAuthorities());
 
+                    if(decodedJWT.getExpiresAt().before(new Date(System.currentTimeMillis() + ONE_HOUR))){
+                        var token = SecurityUtils.createToken(valueObject);
+                        SecurityUtils.setToken(res, token);
+                    }
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                     securityCtx.setAuthentication(authToken);
                 } catch (Exception e) {
-                    log.debug("Cannot get authentication context: " + e.getMessage());
+                    log.debug("Can't get authentication context: " + e.getMessage());
                 }
 
             }
