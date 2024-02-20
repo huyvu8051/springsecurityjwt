@@ -28,7 +28,8 @@ public class SecurityUtils {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String AUTHORIZATION_PREFIX = "Bearer_";
-    private static final int SIX_HOUR = 1000 * 60 * 60 * 6;
+    private static final int SIX_HOURS_MILLISECOND = 1000 * 60 * 60 * 6;
+    private static final int SIX_HOURS = 3600 * 6;
 
     private static final String USER_CLAIM = "user";
     private static final String ISSUER = "auth0";
@@ -47,7 +48,7 @@ public class SecurityUtils {
         return builder
                 .withIssuedAt(new Date())
                 .withIssuer(ISSUER)
-                .withExpiresAt(new Date(System.currentTimeMillis() + SIX_HOUR))
+                .withExpiresAt(new Date(System.currentTimeMillis() + SIX_HOURS_MILLISECOND))
                 .sign(ALGORITHM);
     }
 
@@ -82,7 +83,7 @@ public class SecurityUtils {
 
     public static void setToken(HttpServletResponse res, String token) {
         var cookie = new Cookie(AUTHORIZATION_HEADER, AUTHORIZATION_PREFIX + token);
-        cookie.setMaxAge(3600 * 6);
+        cookie.setMaxAge(SIX_HOURS);
         cookie.setPath("/");
         res.addCookie(cookie);
     }
