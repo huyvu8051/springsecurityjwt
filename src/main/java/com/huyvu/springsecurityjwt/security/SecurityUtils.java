@@ -2,6 +2,7 @@ package com.huyvu.springsecurityjwt.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
 
 import java.util.Arrays;
@@ -33,25 +37,21 @@ public class SecurityUtils {
 
 
     @SneakyThrows
-    public static JwtTokenVo validateJWTToken(String token) {
+    public static DecodedJWT validate(String token) {
         var verifier = JWT.require(ALGORITHM)
                 .withIssuer(ISSUER)
                 .build();
-        var decodedJWT = verifier.verify(token);
-        var expAt = decodedJWT.getExpiresAt();
-        Assert.isTrue(isTokenNotExpired(expAt), "Token is expired.");
+        return verifier.verify(token);
+    }
+
+
+    @SneakyThrows
+    public static JwtTokenVo getValueObject(DecodedJWT decodedJWT) {
         var userClaim = decodedJWT.getClaims().get(USER_CLAIM).asString();
-
-        var jwtTokenVo = OBJECT_MAPPER.readValue(userClaim, JwtTokenVo.class);
-
-        return jwtTokenVo;
-
+        return OBJECT_MAPPER.readValue(userClaim, JwtTokenVo.class);
     }
 
 
-    private static boolean isTokenNotExpired(Date expAt) {
-        return expAt.after(new Date());
-    }
 
     @SneakyThrows
     public static String createToken(JwtTokenVo jwtTokenVo) {
@@ -65,7 +65,7 @@ public class SecurityUtils {
                 .sign(ALGORITHM);
     }
 
-    public static String getTokenFromRequest(HttpServletRequest req) {
+    public static String getToken(HttpServletRequest req) {
         var cookies = req.getCookies();
         var authCookie = Arrays.stream(cookies)
                 .filter(e -> e.getName().equals(AUTHORIZATION_HEADER))
@@ -78,10 +78,19 @@ public class SecurityUtils {
         return jwtToken;
     }
 
-    public static void setTokenToResponse(HttpServletResponse res, String token) {
+    public static void setToken(HttpServletResponse res, String token) {
         var cookie = new Cookie(AUTHORIZATION_HEADER, AUTHORIZATION_PREFIX + token);
         cookie.setMaxAge(3600 * 6);
         cookie.setPath("/");
         res.addCookie(cookie);
+    }
+
+
+    public static JwtTokenVo getSession(){
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof AnonymousAuthenticationToken) {
+            throw new AccessDeniedException("Not authorized.");
+        }
+        return (JwtTokenVo) authentication.getPrincipal();
     }
 }

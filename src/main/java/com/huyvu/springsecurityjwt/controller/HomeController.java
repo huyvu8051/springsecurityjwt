@@ -14,13 +14,15 @@ public class HomeController {
     @GetMapping
     String signing(Long uId, String username, String[] roles, HttpServletResponse res){
         var token = SecurityUtils.createToken(new JwtTokenVo(uId, username, Arrays.stream(roles).toList()));
-        SecurityUtils.setTokenToResponse(res, token);
+        SecurityUtils.setToken(res, token);
         return "signed";
     }
 
 
     @GetMapping("/secured")
     String secured(){
-        return "Secured";
+        var session = SecurityUtils.getSession();
+
+        return "Secured " + session;
     }
 }

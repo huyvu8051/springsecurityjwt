@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Date;
 
 @Slf4j
 @Component
@@ -48,10 +50,16 @@ public class LazySecurityContextProviderFilter extends OncePerRequestFilter {
         public Authentication getAuthentication() {
             if (securityCtx.getAuthentication() == null || securityCtx.getAuthentication() instanceof AnonymousAuthenticationToken) {
                 try {
-                    var jwtToken = SecurityUtils.getTokenFromRequest(this.req);
-                    var jwtTokenResult = SecurityUtils.validateJWTToken(jwtToken);
-                    var authToken = new PreAuthenticatedAuthenticationToken(jwtTokenResult, null, jwtTokenResult.getAuthorities());
-//                    authToken.setAuthenticated(false);
+                    var jwtToken = SecurityUtils.getToken(this.req);
+                    var decodedJWT = SecurityUtils.validate(jwtToken);
+
+                    if (decodedJWT.getExpiresAt().before(new Date())) {
+                        throw new AuthenticationServiceException("Token expired.");
+                    }
+
+                    var valueObject = SecurityUtils.getValueObject(decodedJWT);
+                    var authToken = new PreAuthenticatedAuthenticationToken(valueObject, null, valueObject.getAuthorities());
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                     securityCtx.setAuthentication(authToken);
                 } catch (Exception e) {
