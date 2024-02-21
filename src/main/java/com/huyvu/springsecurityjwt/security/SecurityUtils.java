@@ -16,6 +16,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -52,6 +54,15 @@ public class SecurityUtils {
                 .sign(ALGORITHM);
     }
 
+    public static void setJwtToClient(JwtTokenVo vo){
+        var token = createToken(vo);
+        var cookie = new Cookie(AUTHORIZATION_HEADER, AUTHORIZATION_PREFIX + token);
+        cookie.setMaxAge(SIX_HOURS);
+        cookie.setPath("/");
+        var attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        attributes.getResponse().addCookie(cookie);
+    }
+
     @SneakyThrows
     public static DecodedJWT validate(String token) {
         var verifier = JWT.require(ALGORITHM)
@@ -68,6 +79,7 @@ public class SecurityUtils {
     }
 
 
+
     public static String getToken(HttpServletRequest req) {
         var cookies = req.getCookies();
         var authCookie = Arrays.stream(cookies)
@@ -79,13 +91,6 @@ public class SecurityUtils {
 
         String jwtToken = authorizationHeader.substring(AUTHORIZATION_PREFIX.length());
         return jwtToken;
-    }
-
-    public static void setToken(HttpServletResponse res, String token) {
-        var cookie = new Cookie(AUTHORIZATION_HEADER, AUTHORIZATION_PREFIX + token);
-        cookie.setMaxAge(SIX_HOURS);
-        cookie.setPath("/");
-        res.addCookie(cookie);
     }
 
 

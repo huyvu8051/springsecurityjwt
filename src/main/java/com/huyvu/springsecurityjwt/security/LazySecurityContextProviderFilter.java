@@ -53,12 +53,11 @@ public class LazySecurityContextProviderFilter extends OncePerRequestFilter {
                         throw new AuthenticationServiceException("Token expired.");
                     }
 
-                    var valueObject = SecurityUtils.getValueObject(decodedJWT);
-                    var authToken = new PreAuthenticatedAuthenticationToken(valueObject, null, valueObject.getAuthorities());
+                    var jwtTokenVo = SecurityUtils.getValueObject(decodedJWT);
+                    var authToken = new PreAuthenticatedAuthenticationToken(jwtTokenVo, null, jwtTokenVo.getAuthorities());
 
                     if(decodedJWT.getExpiresAt().before(new Date(System.currentTimeMillis() + ONE_HOUR))){
-                        var token = SecurityUtils.createToken(valueObject);
-                        SecurityUtils.setToken(res, token);
+                        SecurityUtils.setJwtToClient(jwtTokenVo);
                     }
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
